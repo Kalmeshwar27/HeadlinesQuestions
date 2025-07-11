@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Question Generator with Selectable Correct Option</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-right: 10px;
+      background: #3c8dbc;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #367fa9;
+    }
+    .option-container {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Headline Question Generator </h2>
+
+  <label>Sentence (use 2 <code>__</code> for blank):</label>
+  <input type="text" id="sentence" placeholder="e.g. Elon Musk says Twitter is now __">
+
+  <div class="option-container">
+    <label>Option 1:</label>
+    <input type="text" id="opt1">
+  </div>
+
+  <div class="option-container">
+    <label>Option 2:</label>
+    <input type="text" id="opt2">
+  </div>
+
+  <div class="option-container">
+    <label>Option 3:</label>
+    <input type="text" id="opt3">
+  </div>
+
+  <div class="option-container">
+    <label>Option 4:</label>
+    <input type="text" id="opt4">
+  </div>
+
+  <label>Select the correct answer:</label>
+  <select id="correctSelect">
+  <option value="">-- Select correct option --</option>
+</select>
+
+  <label>Image URL (optional):</label>
+  <input type="text" id="image">
+
+  <label>Info (optional):</label>
+  <input type="text" id="info">
+
+  <label>Read More URL (optional):</label>
+  <input type="text" id="readmore">
+
+  <button onclick="addQuestion()">Add Question</button>
+  <button onclick="download()">Download JSON</button>
+  <button onclick="clearAll()">Clear All</button>
+
+  <h3> Questions Preview</h3>
+  <textarea id="output" rows="15" readonly></textarea>
+
+  <script>
+    const allQuestions = [];
+
+    function addQuestion() {
+      const sentence = document.getElementById('sentence').value.trim();
+      const options = [
+        document.getElementById('opt1').value.trim(),
+        document.getElementById('opt2').value.trim(),
+        document.getElementById('opt3').value.trim(),
+        document.getElementById('opt4').value.trim(),
+      ];
+      const correctKey = document.getElementById('correctSelect').value;
+      const image = document.getElementById('image').value.trim();
+      const info = document.getElementById('info').value.trim();
+      const readmore = document.getElementById('readmore').value.trim();
+
+      if (!sentence || options.some(opt => !opt) || !correctKey) {
+        alert("Please fill in all options and select the correct answer.");
+        return;
+      }
+
+      const correctIndex = parseInt(correctKey.replace("opt", "")) - 1;
+      const correctAnswer = options[correctIndex];
+
+      const shuffledOptions = [...options].sort(() => Math.random() - 0.5);
+
+      const question = {
+        image: image,
+        sentence: sentence,
+        correctAnswer: correctAnswer,
+        options: shuffledOptions,
+        info: info,
+        readMore: readmore,
+        attempted: false,
+        correct: false
+      };
+
+      allQuestions.push(question);
+      updateOutput();
+      clearInputs();
+    }
+
+    function updateOutput() {
+      const json = {
+        data: allQuestions
+      };
+      document.getElementById('output').value = JSON.stringify(json, null, 2);
+    }
+
+    function clearInputs() {
+      document.getElementById('sentence').value = '';
+      document.getElementById('opt1').value = '';
+      document.getElementById('opt2').value = '';
+      document.getElementById('opt3').value = '';
+      document.getElementById('opt4').value = '';
+      document.getElementById('correctSelect').value = '';
+      document.getElementById('image').value = '';
+      document.getElementById('info').value = '';
+      document.getElementById('readmore').value = '';
+    }
+
+    function download() {
+      if (allQuestions.length === 0) {
+        alert("Add at least one question first.");
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify({ data: allQuestions }, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "questions.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearAll() {
+      allQuestions.length = 0;
+      document.getElementById('output').value = '';
+    }
+    function updateCorrectDropdown() {
+  const opt1 = document.getElementById('opt1').value.trim();
+  const opt2 = document.getElementById('opt2').value.trim();
+  const opt3 = document.getElementById('opt3').value.trim();
+  const opt4 = document.getElementById('opt4').value.trim();
+
+  const select = document.getElementById('correctSelect');
+  select.innerHTML = '<option value="">-- Select correct option --</option>';
+
+  [opt1, opt2, opt3, opt4].forEach((val, i) => {
+    if (val !== "") {
+      const option = document.createElement("option");
+      option.value = "opt" + (i + 1);
+      option.textContent = val;
+      select.appendChild(option);
+    }
+  });
+}
+['opt1', 'opt2', 'opt3', 'opt4'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateCorrectDropdown);
+});
+
+  </script>
+</body>
+</html>
